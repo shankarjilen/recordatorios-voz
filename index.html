@@ -73,6 +73,8 @@
         .btn-delete { background: #fee2e2; color: #b91c1c; }
         .completed { opacity: 0.6; background: #f3f4f6; }
         .completed .reminder-text { text-decoration: line-through !important; }
+        .missed { background: #ffedd5; border-color: #f97316; }
+        .missed .reminder-text::after { content: " ⏰ VENCIDO"; color: #ea580c; font-weight: bold; }
         footer { text-align: center; font-size: 0.7rem; color: #9ca3af; margin-top: 18px; }
 
         .badge {
@@ -213,6 +215,69 @@
         }
         .alarm-close-btn:active { transform: scale(0.95); }
 
+        #missedModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease;
+        }
+        #missedModal.active { display: flex; }
+        .missed-content {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            border-radius: 40px;
+            padding: 40px 32px 32px;
+            max-width: 90%;
+            width: 420px;
+            margin: 20px;
+            box-shadow: 0 30px 80px rgba(234, 88, 12, 0.5);
+            animation: slideUp 0.4s ease;
+            position: relative;
+            color: white;
+            text-align: center;
+        }
+        .missed-icon { font-size: 56px; margin-bottom: 12px; display: block; }
+        .missed-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .missed-subtitle { font-size: 0.75rem; opacity: 0.8; margin-bottom: 16px; }
+        .missed-list {
+            background: rgba(255,255,255,0.15);
+            border-radius: 24px;
+            padding: 16px;
+            margin: 16px 0 24px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .missed-list-item {
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        .missed-list-item:last-child { border-bottom: none; }
+        .missed-close-btn {
+            background: white;
+            color: #ea580c;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 60px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            width: 100%;
+        }
+        .missed-close-btn:active { transform: scale(0.95); }
+
         #editModal {
             display: none;
             position: fixed;
@@ -261,6 +326,8 @@
             .alarm-icon { font-size: 44px; }
             .settings-content { padding: 20px 16px; }
             .row-fields input[type="time"] { font-size: 0.85rem; }
+            .missed-content { padding: 28px 20px 24px; }
+            .missed-list-item { font-size: 0.85rem; }
         }
     </style>
 </head>
@@ -349,6 +416,16 @@
         </div>
     </div>
 
+    <div id="missedModal">
+        <div class="missed-content">
+            <span class="missed-icon">⏰</span>
+            <div class="missed-title">Recordatorios vencidos</div>
+            <div class="missed-subtitle">Estos recordatorios pasaron sin ser atendidos</div>
+            <div class="missed-list" id="missedList"></div>
+            <button class="missed-close-btn" id="missedCloseBtn">✅ Entendido, los revisaré</button>
+        </div>
+    </div>
+
     <footer>🔔 Las notificaciones + sonido suenan a la hora exacta (navegador abierto)</footer>
 </div>
 
@@ -379,6 +456,9 @@
     const mobileNotice = document.getElementById('mobileNotice');
     const noticeClose = document.getElementById('noticeClose');
     const badge = document.getElementById('notificationBadge');
+    const missedModal = document.getElementById('missedModal');
+    const missedList = document.getElementById('missedList');
+    const missedCloseBtn = document.getElementById('missedCloseBtn');
 
     function updateBadge() {
         const pending = reminders.filter(r => !r.completed && new Date(r.datetime) > new Date()).length;
@@ -409,9 +489,12 @@
     function loadReminders() {
         const stored = localStorage.getItem('voice_reminders_app');
         reminders = stored ? JSON.parse(stored) : [];
+        // Asegurar que los recordatorios viejos tengan el campo missed
+        reminders.forEach(r => { if (r.missed === undefined) r.missed = false; });
         renderReminders();
         scheduleAllNotifications();
         updateBadge();
+        checkMissedReminders();
     }
 
     function persistReminders() {
@@ -423,7 +506,14 @@
         if (!text.trim()) { statusSpan.innerText = '⚠️ No puedes guardar un recordatorio vacío'; return false; }
         if (!dateISO) { statusSpan.innerText = '⚠️ Selecciona fecha y hora'; return false; }
         const newId = Date.now() + '-' + Math.random().toString(36).substr(2, 6);
-        reminders.unshift({ id: newId, text: text.trim(), datetime: dateISO, completed: false, createdAt: new Date().toISOString() });
+        reminders.unshift({ 
+            id: newId, 
+            text: text.trim(), 
+            datetime: dateISO, 
+            completed: false, 
+            missed: false,
+            createdAt: new Date().toISOString() 
+        });
         persistReminders();
         renderReminders();
         scheduleSingleNotification(reminders[0]);
@@ -445,6 +535,9 @@
         const reminder = reminders.find(r => r.id === id);
         if (reminder) {
             reminder.completed = !reminder.completed;
+            if (reminder.completed) {
+                reminder.missed = false;
+            }
             persistReminders();
             renderReminders();
             scheduleAllNotifications();
@@ -482,7 +575,14 @@
         if (isNaN(newDateObj.getTime())) { statusSpan.innerText = '❌ Fecha/hora inválida'; return; }
         reminder.text = newText;
         reminder.datetime = newDateTime;
-        if (reminder.completed && newDateObj > new Date()) { reminder.completed = false; statusSpan.innerText = '🔄 Reactivado'; }
+        // Si se cambia a futuro, quitar la marca de vencido
+        if (newDateObj > new Date()) {
+            reminder.missed = false;
+        }
+        if (reminder.completed && newDateObj > new Date()) { 
+            reminder.completed = false; 
+            statusSpan.innerText = '🔄 Reactivado'; 
+        }
         else { statusSpan.innerText = '📝 Actualizado'; }
         persistReminders();
         renderReminders();
@@ -502,6 +602,47 @@
     function scheduleAllNotifications() {
         clearAllTimeouts();
         reminders.forEach(r => { if (!r.completed && new Date(r.datetime) > new Date()) scheduleSingleNotification(r); });
+    }
+
+    function checkMissedReminders() {
+        const now = new Date();
+        const missed = reminders.filter(r => 
+            !r.completed && 
+            !r.missed && 
+            new Date(r.datetime) <= now
+        );
+        
+        if (missed.length > 0) {
+            // Marcar como vistos
+            missed.forEach(r => r.missed = true);
+            persistReminders();
+            
+            // Mostrar modal
+            let html = '';
+            missed.forEach(r => {
+                html += `<div class="missed-list-item">🔔 ${escapeHtml(r.text)}</div>`;
+            });
+            missedList.innerHTML = html;
+            missedModal.classList.add('active');
+            
+            // Sonido suave (una vez)
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 600;
+                osc.type = 'sine';
+                gain.gain.value = 0.3;
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.5);
+                osc.stop(ctx.currentTime + 0.5);
+                setTimeout(() => ctx.close(), 600);
+            } catch(e) {}
+            
+            statusSpan.innerText = `⏰ ${missed.length} recordatorio(s) vencido(s)`;
+        }
     }
 
     function reproducirTono(tipo) {
@@ -656,6 +797,7 @@
             const reminder = reminders.find(r => r.id === alarmReminderId);
             if (reminder && !reminder.completed) {
                 reminder.completed = true;
+                reminder.missed = false;
                 persistReminders();
                 renderReminders();
                 scheduleAllNotifications();
@@ -664,6 +806,11 @@
             }
             alarmReminderId = null;
         }
+    }
+
+    function closeMissedModal() {
+        missedModal.classList.remove('active');
+        renderReminders();
     }
 
     function sendNotification(reminder) {
@@ -682,8 +829,14 @@
         if (reminders.length === 0) { remindersDiv.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:20px;">✨ No hay recordatorios. Graba o escribe uno ✨</div>'; return; }
         let html = '';
         reminders.forEach(rem => {
+            let extraClass = '';
+            if (rem.completed) {
+                extraClass = 'completed';
+            } else if (rem.missed) {
+                extraClass = 'missed';
+            }
             html += `
-                <div class="reminder-card ${rem.completed ? 'completed' : ''}">
+                <div class="reminder-card ${extraClass}">
                     <div class="reminder-text">${escapeHtml(rem.text)}</div>
                     <div class="reminder-date">📅 ${new Date(rem.datetime).toLocaleString()}</div>
                     <div class="reminder-actions">
@@ -752,19 +905,52 @@
         statusSpan.innerText = '🔊 Tono guardado: ' + tonoSelectorSettings.options[tonoSelectorSettings.selectedIndex].text;
     }
 
+    function getDeviceType() {
+        const ua = navigator.userAgent;
+        if (/tablet|ipad|playbook|silk|android(?!.*mobile)/i.test(ua)) return 'tablet';
+        if (/mobile|iphone|ipod|android|blackberry|opera mini|iemobile/i.test(ua)) return 'mobile';
+        return 'desktop';
+    }
+
+    function setDeviceMessage() {
+        const device = getDeviceType();
+        const noticeText = document.querySelector('#mobileNotice span:last-child');
+        const icon = document.querySelector('#mobileNotice span:first-child');
+        
+        let message = '';
+        let iconEmoji = '';
+        
+        if (device === 'mobile') {
+            message = '<strong>Importante:</strong> Agrega esta app a tu pantalla de inicio. Mantén la ventana abierta para que suenen los recordatorios.';
+            iconEmoji = '📱';
+        } else if (device === 'tablet') {
+            message = '<strong>Consejo:</strong> Agrega esta app a tu pantalla de inicio para acceder rápido. Mantén la ventana abierta para los recordatorios.';
+            iconEmoji = '📟';
+        } else {
+            message = '<strong>Tip:</strong> Mantén esta pestaña abierta en tu navegador para que los recordatorios suenen a tiempo.';
+            iconEmoji = '💻';
+        }
+        
+        if (icon && noticeText) {
+            icon.textContent = iconEmoji;
+            noticeText.innerHTML = message;
+        }
+    }
+
     window.deleteReminder = deleteReminder;
     window.toggleComplete = toggleComplete;
     window.editReminder = editReminder;
 
     function init() {
         setDefaultDateTime();
+        setDeviceMessage();
         loadReminders();
         initSpeech();
         requestNotificationPermission();
         
         setTimeout(() => {
             mobileNotice.classList.add('hidden');
-        }, 10000);
+        }, 12000);
         
         noticeClose.addEventListener('click', () => {
             mobileNotice.classList.add('hidden');
@@ -781,6 +967,9 @@
         
         alarmCloseBtn.addEventListener('click', closeAlarmModal);
         alarmModal.addEventListener('click', (e) => { if (e.target === alarmModal) closeAlarmModal(); });
+        
+        missedCloseBtn.addEventListener('click', closeMissedModal);
+        missedModal.addEventListener('click', (e) => { if (e.target === missedModal) closeMissedModal(); });
         
         settingsBtn.addEventListener('click', openSettings);
         closeSettingsBtn.addEventListener('click', closeSettings);
