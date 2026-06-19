@@ -409,6 +409,32 @@
             .missed-list-item { font-size: 0.85rem; }
             .auth-content { padding: 28px 20px 24px; }
         }
+
+/* NUEVO MODAL - USO DE LA APP */
+#usageModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 1500;
+    backdrop-filter: blur(4px);
+}
+#usageModal.active { display: flex; }
+.usage-content {
+    background: white;
+    border-radius: 32px;
+    padding: 28px 24px 24px;
+    max-width: 90%;
+    width: 450px;
+    margin: 20px;
+    animation: slideUp 0.3s ease;
+}
+
     </style>
 </head>
 <body>
@@ -465,25 +491,49 @@
     </div>
     <div id="remindersList"></div>
 
-    <div id="settingsModal">
-        <div class="settings-content">
-            <h3>⚙️ Configuración</h3>
-            <label for="tonoSelectorSettings">🔊 Tono de alarma</label>
-            <select id="tonoSelectorSettings">
-                <option value="simple">🔔 Simple</option>
-                <option value="grave">🔉 Grave</option>
-                <option value="agudo">🔊 Agudo</option>
-                <option value="fuerte">📢 Fuerte</option>
-                <option value="largo">⏱️ Largo</option>
-                <option value="repetitivo">🔁 Repetitivo</option>
-                <option value="ascendente">📈 Ascendente</option>
-                <option value="descendente">📉 Descendente</option>
-                <option value="doble">🔔🔔 Doble</option>
-            </select>
-            <button class="test-btn" id="testTonoBtn">🔊 Probar sonido</button>
-            <button class="close-btn" id="closeSettingsBtn">❌ Cerrar</button>
-        </div>
+<div id="settingsModal">
+    <div class="settings-content">
+        <h3>⚙️ Configuración</h3>
+        
+        <!-- NUEVO BOTÓN: USO DE LA APLICACIÓN -->
+        <button class="settings-option-btn" id="usageBtn" style="
+            background: #f0f4ff;
+            color: #4f46e5;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 16px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        ">
+            <span style="font-size:1.2rem;">📖</span> Uso de la Aplicación
+            <span style="margin-left:auto; font-size:1.1rem;">›</span>
+        </button>
+        
+        <div style="border-top:1px solid #e5e7eb; margin-bottom:16px;"></div>
+        
+        <label for="tonoSelectorSettings">🔊 Tono de alarma</label>
+        <select id="tonoSelectorSettings">
+            <option value="simple">🔔 Simple</option>
+            <option value="grave">🔉 Grave</option>
+            <option value="agudo">🔊 Agudo</option>
+            <option value="fuerte">📢 Fuerte</option>
+            <option value="largo">⏱️ Largo</option>
+            <option value="repetitivo">🔁 Repetitivo</option>
+            <option value="ascendente">📈 Ascendente</option>
+            <option value="descendente">📉 Descendente</option>
+            <option value="doble">🔔🔔 Doble</option>
+        </select>
+        <button class="test-btn" id="testTonoBtn">🔊 Probar sonido</button>
+        <button class="close-btn" id="closeSettingsBtn">❌ Cerrar</button>
     </div>
+</div>
 
     <div id="editModal">
         <div class="edit-content">
@@ -497,6 +547,84 @@
             </div>
         </div>
     </div>
+
+<!-- NUEVO MODAL: USO DE LA APLICACIÓN -->
+<div id="usageModal">
+    <div class="usage-content">
+        <h3 style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <span style="font-size:1.8rem;">📖</span> ¿Cómo usar esta app?
+        </h3>
+        <div style="max-height:60vh; overflow-y:auto; padding-right:4px;">
+            <p style="font-weight:bold; font-size:0.95rem; margin-top:6px;">1. Grabar un recordatorio</p>
+            <p style="font-size:0.9rem; color:#4b5563; margin:2px 0 10px 8px;">
+                Presiona el botón 🎤 una vez, suelta, y habla con claridad.<br>
+                Al terminar, el texto aparece en el campo de escritura.<br>
+                Elige fecha y hora, y presiona "Guardar recordatorio".
+            </p>
+            
+            <p style="font-weight:bold; font-size:0.95rem;">2. Escribir un recordatorio</p>
+            <p style="font-size:0.9rem; color:#4b5563; margin:2px 0 10px 8px;">
+                Escribe directamente en el campo de texto.<br>
+                Elige fecha y hora.<br>
+                Presiona "Guardar recordatorio".
+            </p>
+            
+            <p style="font-weight:bold; font-size:0.95rem;">3. Recordatorios activos</p>
+            <p style="font-size:0.9rem; color:#4b5563; margin:2px 0 10px 8px;">
+                • Aparecen en la lista con el texto y la fecha/hora.<br>
+                • Los recordatorios que ocurrieron con la app apagada se marcan con "⏰ VENCIDO" en fondo naranja, al volver a abrir la app.<br>
+                • Los completados aparecen tachados.
+            </p>
+            
+            <p style="font-weight:bold; font-size:0.95rem;">4. Completar, editar o eliminar</p>
+            <p style="font-size:0.9rem; color:#4b5563; margin:2px 0 10px 8px;">
+                ✅ Hecho: marca como completado.<br>
+                ✏️ Editar: cambia texto, fecha u hora.<br>
+                🗑️ Eliminar: borra el recordatorio.
+            </p>
+            
+            <p style="font-weight:bold; font-size:0.95rem;">5. Limpiar completados</p>
+            <p style="font-size:0.9rem; color:#4b5563; margin:2px 0 10px 8px;">
+                Presiona "🗑️ Limpiar completados" para eliminar todos los recordatorios que ya marcaste como hechos.
+            </p>
+            
+            <p style="font-weight:bold; font-size:0.95rem;">6. Configuración (engranaje)</p>
+            <p style="font-size:0.9rem; color:#4b5563; margin:2px 0 10px 8px;">
+                • Sonidos de alarma: puedes elegir entre 9 tonos diferentes. Prueba el sonido antes de guardarlo. El sonido se guarda automáticamente al cerrar Configuración.
+            </p>
+            
+            <p style="font-weight:bold; font-size:0.95rem; margin-top:12px;">💬 Mensajes que verás</p>
+            <div style="background:#f9fafb; border-radius:12px; padding:10px 12px; margin:4px 0 0 8px; font-size:0.85rem; border:1px solid #e5e7eb;">
+                <div><span style="font-weight:500;">▶️ Listo para grabar</span> <span style="color:#3b82f6;">(Azul)</span></div>
+                <div><span style="font-weight:500;">🎙️ Escuchando...</span> <span style="color:#dc2626;">(Botón rojo y parpadea)</span></div>
+                <div><span style="font-weight:500;">✅ Texto capturado</span> <span style="color:#22c55e;">(Verde)</span></div>
+                <div><span style="font-weight:500;">❌ Error de voz</span> <span style="color:#dc2626;">(Rojo)</span></div>
+                <div><span style="font-weight:500;">✅ Guardar recordatorio</span> <span style="color:#22c55e;">(Verde)</span></div>
+                <div><span style="font-weight:500;">⚠️ Selecciona fecha y hora</span> <span style="color:#eab308;">(Amarillo)</span></div>
+                <div><span style="font-weight:500;">🔄 Reactivado</span> <span style="color:#3b82f6;">(Azul)</span></div>
+                <div><span style="font-weight:500;">📝 Actualizado</span> <span style="color:#3b82f6;">(Azul)</span></div>
+                <div><span style="font-weight:500;">🔔 Sonó: [texto]</span> <span style="color:#7c3aed;">(En el modal de alarma)</span></div>
+                <div><span style="font-weight:500;">⏰ X recordatorio(s) vencido(s)</span> <span style="color:#f97316;">(Naranja)</span></div>
+                <div><span style="font-weight:500;">🧹 Completados eliminados</span> <span style="color:#6b7280;">(Gris)</span></div>
+                <div><span style="font-weight:500;">🔊 Tono guardado: [nombre]</span> <span style="color:#22c55e;">(Verde)</span></div>
+                <div><span style="font-weight:500;">Banner informativo</span> <span style="color:#eab308;">(Amarillo, 12 segundos)</span></div>
+            </div>
+        </div>
+        <button class="usage-close-btn" id="usageCloseBtn" style="
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 16px;
+        ">✅ Entendido</button>
+    </div>
+</div>
+
 
     <div id="alarmModal">
         <div class="alarm-content">
@@ -656,34 +784,44 @@
         authBtn.textContent = '✅ Validar clave';
     }
 
-    async function handleAuth() {
-        const key = authInput.value.trim();
-        if (!key) {
-            showAuthError('Por favor, ingresa una clave');
-            return;
-        }
-
-        authBtn.disabled = true;
-        authBtn.textContent = '⏳ Validando...';
-        authError.textContent = '';
-
-        const result = await validateKey(key);
-
-        if (result.valid) {
-            localStorage.setItem('recordatorio_key', key);
-            appAuthorized = true;
-            showApp();
-        } else {
-            const msg = result.message || 'Clave inválida o inactiva';
-            showAuthError('❌ ' + msg);
-        }
+async function handleAuth() {
+    const key = authInput.value.trim();
+    if (!key) {
+        showAuthError('Por favor, ingresa una clave');
+        return;
     }
 
+    authBtn.disabled = true;
+    authBtn.textContent = '⏳ Validando...';
+    authError.textContent = '';
+
+    const result = await validateKey(key);
+
+    if (result.valid) {
+        localStorage.setItem('recordatorio_key', key);
+        appAuthorized = true;
+        showApp();
+    } else {
+        // NUEVO: Detectar si es error de límite de dispositivos
+        let msg = result.message || 'Clave inválida o inactiva';
+        
+        // Si el mensaje contiene "dispositivos", formatearlo con el límite
+        if (msg.includes('Límite de dispositivos')) {
+            // Extraer el límite del resultado o usar valor por defecto
+            const limite = result.device_limit || 'desconocido';
+            msg = `❌ Límite de dispositivos alcanzado. Esta clave solo puede usarse en ${limite} dispositivo(s).`;
+        } else {
+            msg = '❌ ' + msg;
+        }
+        
+        showAuthError(msg);
+    }
+}
+
     // ============================================================
-    // FUNCIONES PARA CREAR LA FUNCIÓN EN SUPABASE (SQL)
+    // FUNCIÓN SQL PARA SUPABASE (versión actualizada)
     // ============================================================
-    // Esta función se ejecuta en Supabase, no en la app.
-    // La incluimos como comentario para que la copies y ejecutes en SQL Editor.
+    // Copia y ejecuta este código en el SQL Editor de Supabase.
     /*
     CREATE OR REPLACE FUNCTION validate_key(p_key TEXT, p_device_id TEXT)
     RETURNS JSONB AS $$
@@ -706,14 +844,15 @@
 
         -- Verificar límite de dispositivos
         IF v_record.devices_used >= v_record.device_limit THEN
-            RETURN jsonb_build_object('valid', false, 'message', 'Límite de dispositivos alcanzado');
+            RETURN jsonb_build_object(
+                'valid', false, 
+                'message', 'Límite de dispositivos alcanzado',
+                'device_limit', v_record.device_limit,
+                'devices_used', v_record.devices_used
+            );
         END IF;
 
-        -- Registrar el dispositivo (solo si no existe ya)
-        -- Nota: Para simplificar, asumimos que cada clave se usa en dispositivos distintos.
-        -- Si quieres permitir que un mismo dispositivo use la clave varias veces,
-        -- necesitarías una tabla separada de dispositivos.
-        -- Por ahora, incrementamos devices_used cada vez que se valida.
+        -- Registrar el dispositivo (incrementar contador)
         UPDATE claves_recordatorios
         SET devices_used = devices_used + 1,
             last_used_at = v_now
@@ -724,7 +863,8 @@
             'message', 'Clave válida',
             'client_name', v_record.client_name,
             'device_limit', v_record.device_limit,
-            'devices_used', v_record.devices_used + 1        );
+            'devices_used', v_record.devices_used + 1
+        );
     END;
     $$ LANGUAGE plpgsql SECURITY DEFINER;
     */
@@ -772,25 +912,47 @@
         updateBadge();
     }
 
-    function addReminder(text, dateISO) {
-        if (!text.trim()) { statusSpan.innerText = '⚠️ No puedes guardar un recordatorio vacío'; return false; }
-        if (!dateISO) { statusSpan.innerText = '⚠️ Selecciona fecha y hora'; return false; }
-        const newId = Date.now() + '-' + Math.random().toString(36).substr(2, 6);
-        reminders.unshift({ 
-            id: newId, 
-            text: text.trim(), 
-            datetime: dateISO, 
-            completed: false, 
-            missed: false,
-            createdAt: new Date().toISOString() 
-        });
-        persistReminders();
-        renderReminders();
-        scheduleSingleNotification(reminders[0]);
-        statusSpan.innerText = '✅ Recordatorio guardado';
-        updateBadge();
-        return true;
+function addReminder(text, dateISO) {
+    if (!text.trim()) { statusSpan.innerText = '⚠️ No puedes guardar un recordatorio vacío'; return false; }
+    if (!dateISO) { statusSpan.innerText = '⚠️ Selecciona fecha y hora'; return false; }
+    
+    // NUEVA VALIDACIÓN: Fecha y hora deben ser al menos 1 minuto posteriores
+    const ahora = new Date();
+    const fechaSeleccionada = new Date(dateISO);
+    const diffMinutos = (fechaSeleccionada - ahora) / 60000;
+    
+    if (diffMinutos < 1) {
+        // Mostrar mensaje en AMARILLO
+        statusSpan.innerText = '⚠️ La fecha y hora deben ser posteriores al momento actual';
+        // Cambiar color del status temporalmente
+        statusSpan.style.color = '#b45309';
+        statusSpan.style.background = '#fef3c7';
+        setTimeout(() => {
+            statusSpan.style.color = '';
+            statusSpan.style.background = '';
+        }, 4000);
+        return false; // NO GUARDAR
     }
+    
+    const newId = Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+    reminders.unshift({ 
+        id: newId, 
+        text: text.trim(), 
+        datetime: dateISO, 
+        completed: false, 
+        missed: false,
+        createdAt: new Date().toISOString() 
+    });
+    persistReminders();
+    renderReminders();
+    scheduleSingleNotification(reminders[0]);
+    statusSpan.innerText = '✅ Recordatorio guardado';
+    // Restaurar colores si estaban cambiados
+    statusSpan.style.color = '';
+    statusSpan.style.background = '';
+    updateBadge();
+    return true;
+}
 
     function deleteReminder(id) {
         reminders = reminders.filter(r => r.id !== id);
@@ -1251,6 +1413,23 @@
     authInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleAuth();
     });
+
+// NUEVO: Abrir modal de "Uso de la Aplicación"
+document.getElementById('usageBtn').addEventListener('click', function() {
+    document.getElementById('usageModal').classList.add('active');
+});
+
+// NUEVO: Cerrar modal de "Uso de la Aplicación"
+document.getElementById('usageCloseBtn').addEventListener('click', function() {
+    document.getElementById('usageModal').classList.remove('active');
+});
+
+// NUEVO: Cerrar al hacer clic fuera del modal
+document.getElementById('usageModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        this.classList.remove('active');
+    }
+});
 
     // Iniciar
     start();
