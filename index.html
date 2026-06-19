@@ -1277,13 +1277,19 @@ function addReminder(text, dateISO) {
         try { recognition.start(); } catch(e) { statusSpan.innerText = '⚠️ Error al iniciar'; }
     }
 
-    function saveFromManual() {
-        const text = manualText.value.trim();
-        if (!text) { statusSpan.innerText = '📝 Escribe o graba algo'; return; }
-        if (!reminderDate.value || !reminderTime.value) { statusSpan.innerText = '⚠️ Elige fecha y hora'; return; }
-        addReminder(text, `${reminderDate.value}T${reminderTime.value}:00`);
+function saveFromManual() {
+    const text = manualText.value.trim();
+    if (!text) { statusSpan.innerText = '📝 Escribe o graba algo'; return; }
+    if (!reminderDate.value || !reminderTime.value) { statusSpan.innerText = '⚠️ Elige fecha y hora'; return; }
+    
+    const dateISO = `${reminderDate.value}T${reminderTime.value}:00`;
+    const guardado = addReminder(text, dateISO);
+    
+    // Solo borrar el texto si se guardó correctamente
+    if (guardado) {
         manualText.value = '';
     }
+}
 
     function cleanCompleted() {
         reminders = reminders.filter(r => !r.completed);
